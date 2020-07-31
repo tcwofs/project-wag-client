@@ -3,12 +3,12 @@ import PropTypes from 'prop-types';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { Redirect } from 'react-router-dom';
 import io from 'socket.io-client';
-import { NameContext } from '../../../app';
+import { UserContext } from '../../../app';
 import { useStyles } from './RoomView.styles';
 
 let socket;
 
-const RoomView = props => {
+const RoomView = (props) => {
   if (!props.location.state) {
     window.location.href = `http://${window.location.host}/`;
   }
@@ -16,7 +16,7 @@ const RoomView = props => {
   const [roomname, setRoomname] = useState('');
   const [rooms, setRooms] = useState();
   const [clicked, setClicked] = useState(false);
-  const { username } = useContext(NameContext);
+  const { user } = useContext(UserContext);
   const { service } = props.location.state;
   const ENDPOINT = `${window.location.host}/rooms`;
   let getRoomInterval = useRef();
@@ -37,17 +37,17 @@ const RoomView = props => {
   }, [service]);
 
   useEffect(() => {
-    socket.on('get-active-rooms', recievedRooms => {
+    socket.on('get-active-rooms', (recievedRooms) => {
       setRooms(recievedRooms);
     });
   });
 
   useEffect(() => {
-    socket.on('error-redirect', message => {
+    socket.on('error-redirect', (message) => {
       window.alert(message.error);
       window.location.href = `http://${window.location.host}/`;
     });
-    socket.on('error-msg', message => {
+    socket.on('error-msg', (message) => {
       window.alert(message.error);
     });
   }, []);
@@ -62,7 +62,7 @@ const RoomView = props => {
     }
   };
 
-  const connectToExistingRoom = selectedRoom => {
+  const connectToExistingRoom = (selectedRoom) => {
     socket.emit('connect-exist-room', { roomname: selectedRoom, type: service.type });
     socket.on('room created', () => {
       clearInterval(getRoomInterval.current);
@@ -73,7 +73,7 @@ const RoomView = props => {
   return (
     <div className={classes.main}>
       <Paper className={classes.paper}>
-        {clicked ? <Redirect push to={{ pathname: service.path, state: { username, roomname } }} /> : null}
+        {clicked ? <Redirect push to={{ pathname: service.path, state: { username: user.username, roomname } }} /> : null}
 
         <Grid className={classes.grid} container spacing={2}>
           <Grid item md={8} xs={12}>
@@ -96,7 +96,7 @@ const RoomView = props => {
               <div className={classes.createRoom}>
                 <TextField
                   className={classes.createRoomInput}
-                  onChange={event => setRoomname(event.target.value.trim().toLowerCase())}
+                  onChange={(event) => setRoomname(event.target.value.trim().toLowerCase())}
                   label='new room name'
                 />
                 <Button className={classes.createRoomButton} variant='outlined' color='primary' onClick={connectToNewRoom}>
@@ -107,7 +107,7 @@ const RoomView = props => {
                 Connect to a existing one
               </Typography>
               {rooms &&
-                rooms.map(room => (
+                rooms.map((room) => (
                   <div key={room.id}>
                     <p>
                       {room.roomname}

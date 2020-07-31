@@ -4,17 +4,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useStyles } from './AppMain.styles';
 
-export let url;
-
-url = `http://${window.location.host}/api/services`;
-
 const AppMain = () => {
   const classes = useStyles();
+  const url = `http://${window.location.host}/api/services`;
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const getServices = async () => {
+  const getServices = useCallback(async () => {
     try {
       const res = await axios.get(url);
       setServices(res.data);
@@ -22,15 +19,15 @@ const AppMain = () => {
     } catch (err) {
       setError(err.message);
     }
-  };
+  }, [url]);
 
   useEffect(() => {
     getServices();
-  }, []);
+  }, [getServices]);
 
   const renderCollection = useCallback(
     () =>
-      services.map(service => (
+      services.map((service) => (
         <Grid item md={6} xs={12} key={service.id}>
           <Card className={classes.card}>
             <CardContent>

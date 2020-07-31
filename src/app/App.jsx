@@ -1,44 +1,37 @@
 import { MuiThemeProvider } from '@material-ui/core/styles';
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useState } from 'react';
 import io from 'socket.io-client';
+import { v4 as uuidv4 } from 'uuid';
+import { Routes } from '../components/layout';
 import generateName from '../components/utils/nameGenerator';
-import Routes from '../components/utils/Routes';
 import { darkTheme, lightTheme } from '../styles';
 
-export let socket;
+const user = { id: uuidv4(), username: generateName() };
+const socketMain = io(`http://${window.location.host}/login`).emit('new-user-connection', { user });
+const socketChat = io(`http://${window.location.host}/chat`);
 
 export const AppContext = createContext({});
-export const NameContext = createContext({});
+export const UserContext = createContext({});
+export const SocketContext = createContext({});
 
-export default () => {
+const App = () => {
+  // TODO: remove socketMain.id. Use uuid instead. get rid of it on bakend
+  // ? // TODO: How about separate users for chat and main and their rooms
+  // ! // TODO: make /login go /main. remove default namespace actions
   const [theme, setTheme] = useState(darkTheme);
-  const [username] = useState(generateName());
-  const ENDPOINT = `http://${window.location.host}`;
   const switchTheme = () => setTheme(theme.palette.type === 'light' ? darkTheme : lightTheme);
-
-  useEffect(() => {
-    socket = io(ENDPOINT).emit('new-user-connection', { username });
-
-    return () => {
-      socket.emit('disconnect');
-      socket.off();
-    };
-  }, [ENDPOINT, username]);
-
-  useEffect(() => {
-    socket.on('error-redirect', message => {
-      window.alert(message.error);
-      window.location.href = `http://${window.location.host}/`;
-    });
-  }, []);
 
   return (
     <MuiThemeProvider theme={theme}>
       <AppContext.Provider value={{ switchTheme }}>
-        <NameContext.Provider value={{ username }}>
-          <Routes />
-        </NameContext.Provider>
+        <UserContext.Provider value={{ user }}>
+          <SocketContext.Provider value={{ socketMain, socketChat }}>
+            <Routes />
+          </SocketContext.Provider>
+        </UserContext.Provider>
       </AppContext.Provider>
     </MuiThemeProvider>
   );
 };
+
+export default App;

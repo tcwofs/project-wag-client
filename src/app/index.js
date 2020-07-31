@@ -1,4 +1,4 @@
-import App, { AppContext, NameContext, socket } from './App';
+import App, { AppContext, SocketContext, UserContext } from './App';
 
-export { AppContext, NameContext, socket };
+export { AppContext, UserContext, SocketContext };
 export default App;

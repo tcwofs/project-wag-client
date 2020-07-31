@@ -1,21 +1,24 @@
 import { makeStyles } from '@material-ui/core/styles';
 
-export const useStyles = makeStyles(theme => ({
+export const useStyles = makeStyles((theme) => ({
+  appContent: {
+    backgroundColor: theme.palette.background.default,
+    color: theme.palette.text.primary,
+    width: '100%',
+    height: '100%',
+  },
   main: {
     backgroundColor: theme.palette.background.default,
     color: theme.palette.text.primary,
     width: '100%',
     display: 'flex',
     justifyContent: 'center',
-    paddingTop: '1vh',
-    paddingBottom: '1vh',
+    marginLeft: '1rem',
   },
   paper: {
-    padding: '20px',
+    padding: '1rem',
     width: '100%',
     maxWidth: '80vw',
-    marginRight: '1rem',
-    marginLeft: '1rem',
     backgroundColor: theme.palette.background.fiveperc,
   },
   grid: {
