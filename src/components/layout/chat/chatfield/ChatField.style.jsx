@@ -2,7 +2,11 @@ import { makeStyles } from '@material-ui/core/styles';
 
 export const useStyles = makeStyles(() => ({
   div: {
-    width: '100%',
+    width: '65%',
+  },
+  users: {
+    width: '35%',
+    paddingLeft: '0.3rem',
   },
   title: {
     textAlign: 'center',

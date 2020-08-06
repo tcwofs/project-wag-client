@@ -25,7 +25,7 @@ import React, { useEffect, useState } from 'react';
 import { useStyles } from './ChatRooms.style';
 
 const ChatView = (props) => {
-  const { room, setRoom, socketChat, user } = props;
+  const { setRoom, socketChat, user } = props;
   const classes = useStyles();
   const [chatRooms, setChatRooms] = useState([]);
   const [enteredChatRooms, setEnteredChatRooms] = useState([]);
@@ -39,13 +39,12 @@ const ChatView = (props) => {
   const [roomErrorText, setRoomErrorText] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorText, setPasswordErrorText] = useState('');
-  const [connectPasswordError, setConnectPasswordError] = useState(false);
-  const [connectPasswordErrorText, setConnectPasswordErrorText] = useState('');
   const [privateRoom, setPrivateRoom] = useState(false);
   let roomInterval;
 
   useEffect(() => {
     socketChat.on('get-user-chatrooms', ({ rooms }) => {
+      if (!rooms) return setEnteredChatRooms([]);
       if (rooms.length === 1) setRoom(rooms[0].roomname);
       setEnteredChatRooms(rooms);
     });
@@ -53,20 +52,25 @@ const ChatView = (props) => {
 
   useEffect(() => {
     socketChat.on('get-all-chatrooms', ({ rooms }) => {
-      console.log(rooms);
       setChatRooms(rooms);
     });
   }, [enteredChatRooms, socketChat]);
+
+  useEffect(() => {
+    socketChat.on('emit-user-chatrooms', () => {
+      socketChat.emit('get-user-chatrooms');
+    });
+  }, [socketChat]);
 
   const deleteRoom = ({ roomname }) => {
     socketChat.emit('del-room', { roomname });
   };
 
   const leaveRoom = ({ roomname }) => {
-    socketChat.emit('del-room', { roomname });
+    socketChat.emit('leave-room', { roomname, user });
   };
 
-  const addRoom = ({ roomname, password, privateRoom }) => {
+  const addRoom = ({ roomname, password = null, privateRoom }) => {
     socketChat.emit('new-chat-room', { roomname, password, privateRoom });
     socketChat.on('new-chat-room-confirmed', ({ error }) => {
       setRoomError(!!error);
@@ -85,7 +89,7 @@ const ChatView = (props) => {
       setRoomErrorText(errorRoom);
       setPasswordError(!!errorPassword);
       setPasswordErrorText(errorPassword);
-      if (!errorRoom) {
+      if (!errorRoom && !errorPassword) {
         setRoomName('');
         socketChat.emit('get-all-chatrooms');
       }
@@ -100,14 +104,6 @@ const ChatView = (props) => {
   const closeRoomDialog = () => {
     setRoomOpen(false);
     clearInterval(roomInterval);
-  };
-
-  const openPasswordDialog = () => {
-    setPasswordOpen(true);
-  };
-
-  const closePasswordDialog = () => {
-    setPasswordOpen(false);
   };
 
   return (
@@ -156,14 +152,14 @@ const ChatView = (props) => {
                 <IconButton
                   edge='end'
                   aria-label='delete'
-                  onClick={() => (value.password ? openPasswordDialog() : connectRoom({ roomname: value.roomname }))}
+                  onClick={() => (value.password ? setPasswordOpen(true) : connectRoom({ roomname: value.roomname }))}
                 >
                   <Add />
                 </IconButton>
                 {value.password ? (
                   <Dialog
                     open={passwordOpen}
-                    onClose={closePasswordDialog}
+                    onClose={() => setPasswordOpen(false)}
                     aria-labelledby='alert-dialog-title'
                     aria-describedby='alert-dialog-description'
                   >
@@ -175,7 +171,7 @@ const ChatView = (props) => {
                         error={passwordError}
                         value={connectPassword}
                         autoFocus
-                        helperText={connectPasswordErrorText}
+                        helperText={passwordErrorText}
                         onChange={(event) => setConnectPassword(event.target.value)}
                         InputLabelProps={{
                           className: classes.floatingLabelFocusStyle,
@@ -183,7 +179,7 @@ const ChatView = (props) => {
                       />
                     </DialogContent>
                     <DialogActions>
-                      <Button onClick={closePasswordDialog} color='primary'>
+                      <Button onClick={() => setPasswordOpen(false)} color='primary'>
                         Close
                       </Button>
                       <Button
@@ -213,7 +209,7 @@ const ChatView = (props) => {
                 <IconButton edge='end' aria-label='delete' onClick={() => leaveRoom({ roomname: value.roomname })}>
                   <ExitToApp />
                 </IconButton>
-                {value.host === user.id ? (
+                {value.host.id === user.id ? (
                   <IconButton edge='end' aria-label='delete' onClick={() => deleteRoom({ roomname: value.roomname })}>
                     <Delete />
                   </IconButton>

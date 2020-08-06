@@ -15,9 +15,6 @@ export const UserContext = createContext({});
 export const SocketContext = createContext({});
 
 const App = () => {
-  // TODO: remove socketMain.id. Use uuid instead. get rid of it on bakend
-  // ? // TODO: How about separate users for chat and main and their rooms
-  // ! // TODO: make /login go /main. remove default namespace actions
   const [theme, setTheme] = useState(darkTheme);
   const switchTheme = () => setTheme(theme.palette.type === 'light' ? darkTheme : lightTheme);
 

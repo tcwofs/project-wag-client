@@ -29,8 +29,5 @@ export const useStyles = makeStyles((theme) => ({
   checkbox: {
     color: theme.palette.text.primary,
     marginLeft: '0.7rem',
-    '&$checked': {
-      color: theme.palette.text.primary,
-    },
   },
 }));
