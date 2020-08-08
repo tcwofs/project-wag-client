@@ -8,11 +8,12 @@ import { useStyles } from './Routes.styles';
 
 const Routes = () => {
   const classes = useStyles();
+
   return (
-    <div className={classes.appContent}>
+    <div className={classes.appContent} id='appContent'>
       <Router>
         <AppHeader />
-        <Grid container spacing={3} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+        <Grid container spacing={3} className={classes.grid}>
           <Grid item xs={12} sm={8}>
             <Switch>
               <Route path='/room' component={RoomView} exact />

@@ -40,11 +40,17 @@ const ChatView = (props) => {
   const [passwordError, setPasswordError] = useState(false);
   const [passwordErrorText, setPasswordErrorText] = useState('');
   const [privateRoom, setPrivateRoom] = useState(false);
-  let roomInterval;
+
+  useEffect(() => {
+    if (roomOpen) socketChat.emit('get-all-chatrooms');
+  }, [socketChat, roomOpen]);
 
   useEffect(() => {
     socketChat.on('get-user-chatrooms', ({ rooms }) => {
-      if (!rooms) return setEnteredChatRooms([]);
+      if (!rooms || rooms.length === 0) {
+        setRoom('');
+        return setEnteredChatRooms([]);
+      }
       if (rooms.length === 1) setRoom(rooms[0].roomname);
       setEnteredChatRooms(rooms);
     });
@@ -59,6 +65,9 @@ const ChatView = (props) => {
   useEffect(() => {
     socketChat.on('emit-user-chatrooms', () => {
       socketChat.emit('get-user-chatrooms');
+    });
+    socketChat.on('emit-all-chatrooms', () => {
+      socketChat.emit('get-all-chatrooms');
     });
   }, [socketChat]);
 
@@ -78,6 +87,7 @@ const ChatView = (props) => {
       if (!error) {
         setRoomName('');
         setRoomPassword('');
+        socketChat.emit('get-messages', { roomname });
       }
     });
   };
@@ -92,24 +102,15 @@ const ChatView = (props) => {
       if (!errorRoom && !errorPassword) {
         setRoomName('');
         socketChat.emit('get-all-chatrooms');
+        socketChat.emit('get-messages', { roomname });
       }
     });
-  };
-
-  const openRoomDialog = () => {
-    setRoomOpen(true);
-    roomInterval = setInterval(() => socketChat.emit('get-all-chatrooms'), 1000);
-  };
-
-  const closeRoomDialog = () => {
-    setRoomOpen(false);
-    clearInterval(roomInterval);
   };
 
   return (
     <>
       <AppBar position='static' color='default' className={classes.roomRow}>
-        <IconButton aria-label='add' onClick={openRoomDialog}>
+        <IconButton aria-label='add' onClick={() => setRoomOpen(true)}>
           <AddComment />
         </IconButton>
         <Tabs
@@ -128,15 +129,17 @@ const ChatView = (props) => {
               label={value.roomname}
               onClick={() => {
                 setRoom(value.roomname);
+                socketChat.emit('get-users', { roomname: value.roomname });
+                socketChat.emit('get-messages', { roomname: value.roomname });
               }}
             />
           ))}
         </Tabs>
       </AppBar>
-      <Dialog fullScreen open={roomOpen} onClose={closeRoomDialog} className={classes.dialog}>
+      <Dialog fullScreen open={roomOpen} onClose={() => setRoomOpen(false)} className={classes.dialog}>
         <AppBar className={classes.appBar}>
           <Toolbar>
-            <IconButton edge='start' color='inherit' onClick={closeRoomDialog} aria-label='close'>
+            <IconButton edge='start' color='inherit' onClick={() => setRoomOpen(false)} aria-label='close'>
               <Close />
             </IconButton>
             <Typography variant='h6' className={classes.title}>
@@ -167,7 +170,7 @@ const ChatView = (props) => {
                     <DialogContent style={{ display: 'flex', justifyContent: 'center' }}>
                       <TextField
                         type='password'
-                        label='enter room password'
+                        label='password'
                         error={passwordError}
                         value={connectPassword}
                         autoFocus
@@ -182,12 +185,7 @@ const ChatView = (props) => {
                       <Button onClick={() => setPasswordOpen(false)} color='primary'>
                         Close
                       </Button>
-                      <Button
-                        onClick={() => {
-                          connectRoom({ roomname: value.roomname, password: connectPassword });
-                        }}
-                        color='primary'
-                      >
+                      <Button onClick={() => connectRoom({ roomname: value.roomname, password: connectPassword })} color='primary'>
                         Connect
                       </Button>
                     </DialogActions>
@@ -224,7 +222,7 @@ const ChatView = (props) => {
         <form className={classes.form} onSubmit={(event) => event.preventDefault()}>
           <TextField
             required
-            label='enter room name'
+            label='name'
             error={roomError}
             value={roomName}
             helperText={roomErrorText}
@@ -236,7 +234,7 @@ const ChatView = (props) => {
           <TextField
             style={{ marginLeft: '0.7rem' }}
             type='password'
-            label='enter room password'
+            label='password'
             error={passwordError}
             value={roomPassword}
             helperText={passwordErrorText}

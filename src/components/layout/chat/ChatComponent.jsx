@@ -1,4 +1,4 @@
-import { Divider, Grid, Paper } from '@material-ui/core';
+import { Grid, Paper } from '@material-ui/core';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { SocketContext, UserContext } from '../../../app';
 import { useStyles } from './ChatComponent.style';
@@ -24,11 +24,10 @@ const ChatComponent = () => {
     <div className={classes.main}>
       <Paper className={classes.paper}>
         <Grid container spacing={3} className={classes.gridContainer}>
-          <Grid item md={12} className={classes.chatRooms}>
+          <Grid item lg={12} className={classes.chatRooms}>
             <ChatRooms room={room} setRoom={setRoom} socketChat={socketChat} user={user} />
           </Grid>
-          <Divider />
-          <Grid item md={12} className={classes.chatField}>
+          <Grid item lg={12} className={classes.chatField}>
             <ChatField room={room} socketChat={socketChat} user={user} />
           </Grid>
         </Grid>

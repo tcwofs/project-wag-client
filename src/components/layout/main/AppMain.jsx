@@ -16,8 +16,12 @@ const AppMain = () => {
       const res = await axios.get(url);
       setServices(res.data);
       setLoading(false);
+
+      let height = window.innerHeight > document.getElementById('root').scrollHeight ? `${window.innerHeight}px` : 'auto';
+      document.getElementById('appContent').style.height = height;
     } catch (err) {
       setError(err.message);
+      document.getElementById('appContent').style.height = '100vh';
     }
   }, [url]);
 
