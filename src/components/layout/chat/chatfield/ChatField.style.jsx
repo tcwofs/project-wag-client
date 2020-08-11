@@ -37,6 +37,21 @@ export const useStyles = makeStyles((theme) => ({
   systemMessage: {
     padding: '1rem',
     textAlign: 'center',
+    whiteSpace: 'pre-wrap',
     background: theme.palette.background.sevenperc,
+  },
+  userMessage: {
+    padding: '1rem',
+    textAlign: 'right',
+    whiteSpace: 'pre-wrap',
+    color: theme.palette.text.secondary,
+    background: theme.palette.primary.main,
+  },
+  otherMessage: {
+    padding: '1rem',
+    textAlign: 'left',
+    whiteSpace: 'pre-wrap',
+    color: theme.palette.text.secondary,
+    background: theme.palette.secondary.main,
   },
 }));

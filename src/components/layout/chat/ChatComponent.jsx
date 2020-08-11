@@ -24,10 +24,10 @@ const ChatComponent = () => {
     <div className={classes.main}>
       <Paper className={classes.paper}>
         <Grid container spacing={3} className={classes.gridContainer}>
-          <Grid item lg={12} className={classes.chatRooms}>
+          <Grid item className={classes.chatRooms}>
             <ChatRooms room={room} setRoom={setRoom} socketChat={socketChat} user={user} />
           </Grid>
-          <Grid item lg={12} className={classes.chatField}>
+          <Grid item className={classes.chatField}>
             <ChatField room={room} socketChat={socketChat} user={user} />
           </Grid>
         </Grid>

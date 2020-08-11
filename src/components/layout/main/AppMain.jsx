@@ -16,12 +16,8 @@ const AppMain = () => {
       const res = await axios.get(url);
       setServices(res.data);
       setLoading(false);
-
-      let height = window.innerHeight > document.getElementById('root').scrollHeight ? `${window.innerHeight}px` : 'auto';
-      document.getElementById('appContent').style.height = height;
     } catch (err) {
       setError(err.message);
-      document.getElementById('appContent').style.height = '100vh';
     }
   }, [url]);
 
@@ -40,7 +36,7 @@ const AppMain = () => {
               </Typography>
             </CardContent>
             <CardActions>
-              <Button component={RouterLink} to={{ pathname: '/room', state: { service } }} size='small' variant='outlined' color='secondary'>
+              <Button component={RouterLink} to={`/room/${service.type}`} size='small' variant='outlined' color='secondary'>
                 start
               </Button>
             </CardActions>

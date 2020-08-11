@@ -19,7 +19,7 @@ const AppHeader = () => {
   };
 
   return (
-    <div className={classes.main}>
+    <div id='header' className={classes.main}>
       <AppBar position='static'>
         <Toolbar>
           <Typography data-testid='title' variant='h5' className={classes.title} color='textSecondary'>

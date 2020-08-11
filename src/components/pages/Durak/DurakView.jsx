@@ -7,7 +7,7 @@ import { useStyles } from './DurakView.styles';
 
 let socket;
 
-const DurakView = props => {
+const DurakView = (props) => {
   const classes = useStyles();
   const [finishgame, setFinishgame] = useState(null);
   const [lobby, setLobby] = useState(true);
@@ -37,11 +37,11 @@ const DurakView = props => {
   }, [ENDPOINT, username, roomname]);
 
   useEffect(() => {
-    socket.on('error-redirect', message => {
+    socket.on('error-redirect', (message) => {
       window.alert(message.error);
       window.location.href = `http://${window.location.host}/`;
     });
-    socket.on('error-msg', message => {
+    socket.on('error-msg', (message) => {
       window.alert(message.error);
     });
   }, []);
@@ -110,7 +110,7 @@ const DurakView = props => {
           [
             lobby ? (
               <div key={1}>
-                {users.map(user => (
+                {users.map((user) => (
                   <p key={user.id}>
                     {user.username} | {user.ready ? 'ready' : 'not ready'}
                   </p>
@@ -123,7 +123,7 @@ const DurakView = props => {
               <div className={classes.gamefield} key={1}>
                 <Grid container spacing={2} alignItems='flex-start' justify='flex-end' direction='row'>
                   {otherusers ? (
-                    otherusers.map(othuser => (
+                    otherusers.map((othuser) => (
                       <Grid item xs={12 / otherusers.length} key={uuidv4()}>
                         <img
                           alt=''
@@ -149,9 +149,9 @@ const DurakView = props => {
                   <Grid item xs={9}>
                     <Grid container spacing={1}>
                       {field &&
-                        field.map(row => (
+                        field.map((row) => (
                           <Grid item xs={2} key={uuidv4()}>
-                            {row.map(item => (
+                            {row.map((item) => (
                               <img
                                 key={uuidv4()}
                                 alt=''
@@ -213,7 +213,7 @@ const DurakView = props => {
                         <div>
                           <Typography>You are defending</Typography>
                           <Button variant='contained' color='secondary' onClick={finishMove}>
-                            {field.filter(row => row.length % 2 === 0).length === field.length ? (
+                            {field.filter((row) => row.length % 2 === 0).length === field.length ? (
                               !userfinished ? (
                                 <Typography>Draft</Typography>
                               ) : (
@@ -232,21 +232,21 @@ const DurakView = props => {
                   <Grid item xs={12}>
                     <Grid container spacing={0}>
                       {userhand &&
-                        userhand.map(card => (
+                        userhand.map((card) => (
                           <Grid item xs={2} md={1} key={uuidv4()}>
                             <div>
                               <img
                                 alt=''
                                 style={{ maxWidth: '6rem', width: '100%', height: 'auto' }}
                                 src={process.env.PUBLIC_URL + `/cards/${card}.png`}
-                                onClick={e => {
+                                onClick={(e) => {
                                   userstatus === 'attacking_1'
                                     ? cardAttack({ card, second: false })
                                     : userstatus === 'attacking_2'
-                                      ? cardAttack({ card, second: true })
-                                      : userstatus === 'defending'
-                                        ? cardDeffence({ card })
-                                        : e.preventDefault();
+                                    ? cardAttack({ card, second: true })
+                                    : userstatus === 'defending'
+                                    ? cardDeffence({ card })
+                                    : e.preventDefault();
                                 }}
                               />
                             </div>

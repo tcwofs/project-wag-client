@@ -1,73 +1,81 @@
 import { Button, Divider, Grid, Paper, TextField, Typography } from '@material-ui/core';
+import axios from 'axios';
 import PropTypes from 'prop-types';
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Redirect } from 'react-router-dom';
-import io from 'socket.io-client';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { Redirect, useParams } from 'react-router-dom';
 import { UserContext } from '../../../app';
 import { useStyles } from './RoomView.styles';
 
 let socket;
 
-const RoomView = (props) => {
-  if (!props.location.state) {
-    window.location.href = `http://${window.location.host}/`;
-  }
+const RoomView = () => {
   const classes = useStyles();
   const [roomname, setRoomname] = useState('');
   const [rooms, setRooms] = useState();
   const [clicked, setClicked] = useState(false);
   const { user } = useContext(UserContext);
-  const { service } = props.location.state;
-  const ENDPOINT = `${window.location.host}/rooms`;
+  const { serviceName } = useParams();
+  console.log(serviceName);
   let getRoomInterval = useRef();
+  const [service, setService] = useState({});
+  const url = `http://${window.location.host}/api/services`;
+
+  const getServices = useCallback(async () => {
+    try {
+      const res = await axios.get(url);
+      setService(res.data.find((item) => item.name === serviceName));
+    } catch (err) {}
+  }, [url]);
 
   useEffect(() => {
-    socket = io(ENDPOINT);
+    getServices();
+  }, [getServices]);
 
-    return () => {
-      socket.emit('disconnect');
-      socket.off();
-    };
-  }, [ENDPOINT]);
+  // useEffect(() => {
+  //   return () => {
+  //     socket.emit('disconnect');
+  //     socket.off();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    getRoomInterval.current = setInterval(() => {
-      socket.emit('get-active-rooms', { type: service.type });
-    }, 2000);
-  }, [service]);
+  // useEffect(() => {
+  //   getRoomInterval.current = setInterval(() => {
+  //     socket.emit('get-active-rooms', { type: service.type });
+  //   }, 2000);
+  // }, [service]);
 
-  useEffect(() => {
-    socket.on('get-active-rooms', (recievedRooms) => {
-      setRooms(recievedRooms);
-    });
-  });
+  // useEffect(() => {
+  //   socket.on('get-active-rooms', (recievedRooms) => {
+  //     setRooms(recievedRooms);
+  //   });
+  // });
 
-  useEffect(() => {
-    socket.on('error-redirect', (message) => {
-      window.alert(message.error);
-      window.location.href = `http://${window.location.host}/`;
-    });
-    socket.on('error-msg', (message) => {
-      window.alert(message.error);
-    });
-  }, []);
+  // useEffect(() => {
+  //   socket.on('error-redirect', (message) => {
+  //     // window.alert(message.error);
+  //     // window.location.href = `http://${window.location.host}/`;
+  //   });
+  //   socket.on('error-msg', (message) => {
+  //     window.alert(message.error);
+  //   });
+  // }, []);
 
   const connectToNewRoom = () => {
-    if (roomname) {
-      socket.emit('connect-new-room', { roomname, type: service.type });
-      socket.on('room created', () => {
-        clearInterval(getRoomInterval.current);
-        setClicked(true);
-      });
-    }
+    // if (roomname) {
+    //   socket.emit('connect-new-room', { roomname, type: service.type });
+    //   socket.on('room created', () => {
+    //     clearInterval(getRoomInterval.current);
+    //     setClicked(true);
+    //   });
+    // }
   };
 
   const connectToExistingRoom = (selectedRoom) => {
-    socket.emit('connect-exist-room', { roomname: selectedRoom, type: service.type });
-    socket.on('room created', () => {
-      clearInterval(getRoomInterval.current);
-      setClicked(true);
-    });
+    // socket.emit('connect-exist-room', { roomname: selectedRoom, type: service.type });
+    // socket.on('room created', () => {
+    //   clearInterval(getRoomInterval.current);
+    //   setClicked(true);
+    // });
   };
 
   return (

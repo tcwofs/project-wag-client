@@ -13,17 +13,17 @@ const Routes = () => {
     <div className={classes.appContent} id='appContent'>
       <Router>
         <AppHeader />
-        <Grid container spacing={3} className={classes.grid}>
-          <Grid item xs={12} sm={8}>
+        <Grid id='main' container spacing={3} className={classes.grid}>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={8}>
             <Switch>
-              <Route path='/room' component={RoomView} exact />
-              <Route path='/durak' component={DurakView} exact />
-              <Route path='/rps' component={RPSView} exact />
-              <Route path='/ttt' component={TTTView} exact />
+              <Route path='/room/:serviceName' component={RoomView} exact />
+              <Route path='/durak/:roomId' component={DurakView} exact />
+              <Route path='/rps/:roomId' component={RPSView} exact />
+              <Route path='/ttt/:roomId' component={TTTView} exact />
               <Route component={AppMain} />
             </Switch>
           </Grid>
-          <Grid item sm={12} md={4}>
+          <Grid item xs={12} sm={12} md={12} lg={12} xl={4}>
             <ChatComponent />
           </Grid>
         </Grid>

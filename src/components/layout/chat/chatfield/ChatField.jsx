@@ -9,6 +9,7 @@ const ChatView = (props) => {
   const [message, setMessage] = useState('');
   const [activeUsers, setActiveUsers] = useState([]);
   const [messages, setMessages] = useState([]);
+  let messageBody = document.querySelector('#div');
 
   useEffect(() => {
     socketChat.on('emit-users', () => {
@@ -27,23 +28,26 @@ const ChatView = (props) => {
       setMessages([]);
     }
   }, [room]);
-
   useEffect(() => {
     socketChat.on('get-users', ({ users }) => setActiveUsers(users));
-    socketChat.on('get-messages', ({ messages }) => setMessages(messages));
-  }, [socketChat]);
+    socketChat.on('get-messages', ({ messages }) => {
+      setMessages(messages);
+      if (messageBody) messageBody.scrollTop = messageBody.scrollHeight - messageBody.clientHeight;
+    });
+  }, [socketChat, messageBody]);
 
   const sendMessage = (message) => {
-    console.log(message);
-    // socket.emit('get-users', { roomname });
-    // if (message) {
-    //   socket.emit('sendMessage', message, () => setMessage(''));
-    // }
+    if (!room) return;
+    if (message) {
+      socketChat.emit('send-message', { message, roomname: room, user });
+      socketChat.emit('get-messages', { roomname: room });
+      setMessage('');
+    }
   };
 
   return (
     <>
-      <div className={`${classes.div} ${classes.util}`}>
+      <div id='div' className={`${classes.div} ${classes.util}`}>
         <MessageContainer messages={messages} id={user.id} classes={classes} />
       </div>
       <Divider orientation='vertical' flexItem className={`${classes.util} ${classes.divider}`} />
@@ -73,21 +77,18 @@ const ChatView = (props) => {
 
 const MessageContainer = (props) => (
   <>
-    {props.messages.map((message) =>
-      message.from === 'System' ? (
-        <SystenMessage key={message.id} message={message.text} classes={props.classes} />
-      ) : message.from === props.id ? (
-        <UserMessage key={message.id} message={message.text} classes={props.classes} />
-      ) : (
-        <OtherMessage key={message.id} message={message.text} classes={props.classes} />
-      )
-    )}
+    {props.messages.map((message) => (
+      <p
+        key={message.id}
+        className={
+          message.from === 'System' ? props.classes.systemMessage : message.from === props.id ? props.classes.userMessage : props.classes.otherMessage
+        }
+      >
+        {`[${message.username}]: ${message.text}`}
+      </p>
+    ))}
   </>
 );
-
-const UserMessage = (props) => <p className={props.classes.userMessage}>user</p>;
-const OtherMessage = (props) => <p className={props.classes.userMessage}>other</p>;
-const SystenMessage = (props) => <p className={props.classes.systemMessage}>{props.message}</p>;
 
 ChatView.propTypes = {
   room: PropTypes.string,
@@ -98,21 +99,6 @@ ChatView.propTypes = {
 MessageContainer.propTypes = {
   messages: PropTypes.array,
   id: PropTypes.string,
-  classes: PropTypes.object,
-};
-
-OtherMessage.propTypes = {
-  message: PropTypes.string,
-  classes: PropTypes.object,
-};
-
-UserMessage.propTypes = {
-  message: PropTypes.string,
-  classes: PropTypes.object,
-};
-
-SystenMessage.propTypes = {
-  message: PropTypes.string,
   classes: PropTypes.object,
 };
 

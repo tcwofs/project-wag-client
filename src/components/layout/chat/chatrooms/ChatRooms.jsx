@@ -8,6 +8,7 @@ import {
   DialogTitle,
   Divider,
   FormControlLabel,
+  Grid,
   IconButton,
   List,
   ListItem,
@@ -25,7 +26,7 @@ import React, { useEffect, useState } from 'react';
 import { useStyles } from './ChatRooms.style';
 
 const ChatView = (props) => {
-  const { setRoom, socketChat, user } = props;
+  const { room, setRoom, socketChat, user } = props;
   const classes = useStyles();
   const [chatRooms, setChatRooms] = useState([]);
   const [enteredChatRooms, setEnteredChatRooms] = useState([]);
@@ -51,10 +52,14 @@ const ChatView = (props) => {
         setRoom('');
         return setEnteredChatRooms([]);
       }
-      if (rooms.length === 1) setRoom(rooms[0].roomname);
+      if (rooms.length === 1) {
+        setRoom(rooms[0].roomname);
+      }
+      socketChat.emit('get-messages', { roomname: rooms[0].roomname });
+      socketChat.emit('get-users', { roomname: rooms[0].roomname });
       setEnteredChatRooms(rooms);
     });
-  }, [setRoom, socketChat]);
+  }, [setRoom, socketChat, room]);
 
   useEffect(() => {
     socketChat.on('get-all-chatrooms', ({ rooms }) => {
@@ -219,48 +224,55 @@ const ChatView = (props) => {
           ))}
         </List>
 
-        <form className={classes.form} onSubmit={(event) => event.preventDefault()}>
-          <TextField
-            required
-            label='name'
-            error={roomError}
-            value={roomName}
-            helperText={roomErrorText}
-            onChange={(event) => setRoomName(event.target.value)}
-            InputLabelProps={{
-              className: classes.floatingLabelFocusStyle,
-            }}
-          />
-          <TextField
-            style={{ marginLeft: '0.7rem' }}
-            type='password'
-            label='password'
-            error={passwordError}
-            value={roomPassword}
-            helperText={passwordErrorText}
-            onChange={(event) => setRoomPassword(event.target.value)}
-            InputLabelProps={{
-              className: classes.floatingLabelFocusStyle,
-            }}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={privateRoom}
-                onChange={(event) => setPrivateRoom(event.target.checked)}
-                color='primary'
-                className={classes.checkbox}
-                inputProps={{ 'aria-label': 'primary checkbox' }}
+        <form onSubmit={(event) => event.preventDefault()}>
+          <Grid className={classes.form} container spacing={2}>
+            <Grid item>
+              <TextField
+                required
+                label='name'
+                error={roomError}
+                value={roomName}
+                helperText={roomErrorText}
+                onChange={(event) => setRoomName(event.target.value)}
+                InputLabelProps={{
+                  className: classes.floatingLabelFocusStyle,
+                }}
               />
-            }
-            label='private'
-          />
-          <Button size='small' aria-label='add' onClick={() => addRoom({ roomname: roomName, password: roomPassword, privateRoom })}>
-            <Add />
-          </Button>
-          <Button size='small' aria-label='add' onClick={() => connectRoom({ roomname: roomName, password: roomPassword })}>
-            <ArrowForward />
-          </Button>
+            </Grid>
+            <Grid item>
+              <TextField
+                type='password'
+                label='password'
+                error={passwordError}
+                value={roomPassword}
+                helperText={passwordErrorText}
+                onChange={(event) => setRoomPassword(event.target.value)}
+                InputLabelProps={{
+                  className: classes.floatingLabelFocusStyle,
+                }}
+              />
+            </Grid>
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={privateRoom}
+                    onChange={(event) => setPrivateRoom(event.target.checked)}
+                    color='primary'
+                    className={classes.checkbox}
+                    inputProps={{ 'aria-label': 'primary checkbox' }}
+                  />
+                }
+                label='private'
+              />
+              <Button size='small' aria-label='add' onClick={() => addRoom({ roomname: roomName, password: roomPassword, privateRoom })}>
+                <Add />
+              </Button>
+              <Button size='small' aria-label='add' onClick={() => connectRoom({ roomname: roomName, password: roomPassword })}>
+                <ArrowForward />
+              </Button>
+            </Grid>
+          </Grid>
         </form>
       </Dialog>
     </>
