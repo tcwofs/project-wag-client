@@ -7,8 +7,8 @@ import generateName from '../components/utils/nameGenerator';
 import { darkTheme, lightTheme } from '../styles';
 
 const user = { id: uuidv4(), username: generateName() };
-const socketMain = io(`http://${window.location.host}/login`).emit('new-user-connection', { user });
 const socketChat = io(`http://${window.location.host}/chat`);
+io(`http://${window.location.host}/login`).emit('new-user-connection', { user });
 
 export const AppContext = createContext({});
 export const UserContext = createContext({});
@@ -37,7 +37,7 @@ const App = () => {
     <MuiThemeProvider theme={theme}>
       <AppContext.Provider value={{ switchTheme, updateHeight }}>
         <UserContext.Provider value={{ user }}>
-          <SocketContext.Provider value={{ socketMain, socketChat }}>
+          <SocketContext.Provider value={{ socketChat }}>
             <Routes />
           </SocketContext.Provider>
         </UserContext.Provider>

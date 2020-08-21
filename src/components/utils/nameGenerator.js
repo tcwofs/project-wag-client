@@ -3,7 +3,7 @@
 Random Name Generator for Javascript
 */
 
-const capFirst = name => {
+const capFirst = (name) => {
   return name.charAt(0).toUpperCase() + name.slice(1);
 };
 

@@ -1,6 +1,6 @@
 import { makeStyles } from '@material-ui/core/styles';
 
-export const useStyles = makeStyles(theme => ({
+export const useStyles = makeStyles((theme) => ({
   main: {
     backgroundColor: theme.palette.background.default,
     color: theme.palette.text.primary,
@@ -9,10 +9,11 @@ export const useStyles = makeStyles(theme => ({
     justifyContent: 'center',
     paddingTop: '1vh',
     paddingBottom: '1vh',
+    marginLeft: '1rem',
   },
   paper: {
-    padding: '20px',
-    width: '100%',
+    padding: '1rem',
+    width: '95%',
     maxWidth: '80vw',
     marginRight: '1rem',
     marginLeft: '1rem',
@@ -44,5 +45,24 @@ export const useStyles = makeStyles(theme => ({
     width: '100%',
     marginTop: '1vh',
     marginBottom: '1vh',
+  },
+  errorLabel: {
+    textAlign: 'center',
+    marginBottom: '0.5vh',
+    color: theme.palette.text.error,
+  },
+  floatingLabelFocusStyle: {
+    color: theme.palette.text.primary,
+  },
+  checkbox: {
+    color: theme.palette.text.primary,
+  },
+  dialogContent: {
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  rooms: {
+    maxHeight: '20rem',
+    overflowY: 'scroll',
   },
 }));

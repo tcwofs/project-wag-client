@@ -65,7 +65,7 @@ const ChatView = (props) => {
     socketChat.on('get-all-chatrooms', ({ rooms }) => {
       setChatRooms(rooms);
     });
-  }, [enteredChatRooms, socketChat]);
+  }, [socketChat]);
 
   useEffect(() => {
     socketChat.on('emit-user-chatrooms', () => {
@@ -159,7 +159,7 @@ const ChatView = (props) => {
               <ListItemSecondaryAction>
                 <IconButton
                   edge='end'
-                  aria-label='delete'
+                  aria-label='connect'
                   onClick={() => (value.password ? setPasswordOpen(true) : connectRoom({ roomname: value.roomname }))}
                 >
                   <Add />
@@ -207,7 +207,6 @@ const ChatView = (props) => {
           {enteredChatRooms.map((value, index) => (
             <ListItem key={index}>
               <ListItemText primary={value.roomname} />
-
               <ListItemSecondaryAction>
                 <IconButton edge='end' aria-label='delete' onClick={() => leaveRoom({ roomname: value.roomname })}>
                   <ExitToApp />

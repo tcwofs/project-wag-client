@@ -1,17 +1,16 @@
 import { Button, Divider, Grid, Paper, Typography } from '@material-ui/core';
-import PropTypes from 'prop-types';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import io from 'socket.io-client';
 import { v4 as uuidv4 } from 'uuid';
+import { UserContext } from '../../../app';
 import { useStyles } from './DurakView.styles';
 
 let socket;
 
-const DurakView = (props) => {
+const DurakView = () => {
   const classes = useStyles();
   const [finishgame, setFinishgame] = useState(null);
-  const [lobby, setLobby] = useState(true);
-  const [users, setUsers] = useState([]);
   const [userhand, setUserhand] = useState([]);
   const [lastcard, setLastcard] = useState();
   const [otherusers, setOtherusers] = useState();
@@ -19,22 +18,17 @@ const DurakView = (props) => {
   const [userstatus, setUserStatus] = useState('other');
   const [field, setField] = useState();
   const [userfinished, setUserfinished] = useState(false);
-
-  if (!props.location.state) {
-    window.location.href = `http://${window.location.host}/`;
-  }
-  const { username, roomname } = props.location.state;
   const ENDPOINT = `${window.location.host}/durak`;
+  const { roomId } = useParams();
+  const { user } = useContext(UserContext);
 
   useEffect(() => {
-    socket = io(ENDPOINT);
-    socket.emit('connect-room', { roomname });
+    socket = io(ENDPOINT).emit('get-room-durak', { roomId, user });
 
     return () => {
-      socket.emit('disconnect');
       socket.off();
     };
-  }, [ENDPOINT, username, roomname]);
+  }, [ENDPOINT, roomId, user]);
 
   useEffect(() => {
     socket.on('error-redirect', (message) => {
@@ -47,14 +41,6 @@ const DurakView = (props) => {
   }, []);
 
   useEffect(() => {
-    socket.on('get-room-users', ({ activeUsers }) => {
-      setUsers(activeUsers);
-    });
-
-    socket.on('start-game', () => {
-      setLobby(false);
-    });
-
     socket.on('handcards', ({ recievedUserhand, allcards, userhands, status, finished }) => {
       setUserhand(recievedUserhand);
       setLastcard(allcards.lastcard);
@@ -73,30 +59,35 @@ const DurakView = (props) => {
     socket.on('finish-game', ({ lostuser }) => {
       setFinishgame(lostuser.username);
     });
+
+    socket.on('play-again', () => {
+      setFinishgame(null);
+      socket.emit('get-room-durak', { roomId, user });
+    });
   });
 
-  const userReady = () => {
-    socket.emit('user-ready', { roomname });
-  };
-
   const cardAttack = ({ card, second }) => {
-    socket.emit('attack', { card, roomname, second });
+    socket.emit('attack', { card, roomId, second });
   };
 
   const cardDeffence = ({ card }) => {
-    socket.emit('defence', { card, roomname });
+    socket.emit('defence', { card, roomId });
   };
 
   const finishMove = () => {
     setUserfinished(!userfinished);
-    socket.emit('finish-move', { roomname });
+    socket.emit('finish-move', { roomId });
+  };
+
+  const playAgain = () => {
+    socket.emit('play-again', { roomId });
   };
 
   return (
     <div className={classes.main}>
       <Paper className={classes.paper}>
         <Typography style={{ textAlign: 'center' }} variant='h4'>
-          {roomname}
+          {}
         </Typography>
         <Divider style={{ marginBottom: '1rem' }} light />
         {finishgame !== null ? (
@@ -105,167 +96,151 @@ const DurakView = (props) => {
             <Button variant='contained' color='secondary' href={`http://${window.location.host}/`}>
               Go Home
             </Button>
+            <Button variant='contained' color='secondary' onClick={playAgain}>
+              Play Again
+            </Button>
           </div>
         ) : (
-          [
-            lobby ? (
-              <div key={1}>
-                {users.map((user) => (
-                  <p key={user.id}>
-                    {user.username} | {user.ready ? 'ready' : 'not ready'}
-                  </p>
-                ))}
-                <Button variant='contained' color='secondary' onClick={userReady}>
-                  <Typography>Ready</Typography>
-                </Button>
-              </div>
-            ) : (
-              <div className={classes.gamefield} key={1}>
-                <Grid container spacing={2} alignItems='flex-start' justify='flex-end' direction='row'>
-                  {otherusers ? (
-                    otherusers.map((othuser) => (
-                      <Grid item xs={12 / otherusers.length} key={uuidv4()}>
-                        <img
-                          alt=''
-                          style={{
-                            maxWidth: '4rem',
-                            width: '80%',
-                            height: 'auto',
-                          }}
-                          src={process.env.PUBLIC_URL + '/cards/gray_back.png'}
-                        />
-                        <div>
-                          <Typography>{othuser.username}</Typography>
-                          <Typography>{othuser.handlength}</Typography>
-                        </div>
-                      </Grid>
-                    ))
-                  ) : (
-                    <></>
-                  )}
-                </Grid>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={9}>
-                    <Grid container spacing={1}>
-                      {field &&
-                        field.map((row) => (
-                          <Grid item xs={2} key={uuidv4()}>
-                            {row.map((item) => (
-                              <img
-                                key={uuidv4()}
-                                alt=''
-                                style={{
-                                  maxWidth: '6rem',
-                                  width: '100%',
-                                  height: 'auto',
-                                }}
-                                src={process.env.PUBLIC_URL + `/cards/${item}.png`}
-                              />
-                            ))}
-                          </Grid>
-                        ))}
-                    </Grid>
-                  </Grid>
-                  <Grid item xs={3} style={{ position: 'relative' }}>
+          <div className={classes.gamefield} key={1}>
+            <Grid container spacing={2} alignItems='flex-start' justify='flex-end' direction='row'>
+              {otherusers ? (
+                otherusers.map((othuser) => (
+                  <Grid item xs={12 / otherusers.length} key={uuidv4()}>
                     <img
                       alt=''
                       style={{
-                        position: 'relative',
-                        maxWidth: '6rem',
-                        width: '100%',
-                        height: 'auto',
-                      }}
-                      src={process.env.PUBLIC_URL + `/cards/${lastcard}.png`}
-                    />
-                    <img
-                      alt=''
-                      style={{
-                        transform: 'rotate(90deg)',
-                        maxWidth: '6rem',
+                        maxWidth: '4rem',
                         width: '80%',
                         height: 'auto',
-                        position: 'absolute',
-                        top: '30px',
-                        left: '20px',
                       }}
                       src={process.env.PUBLIC_URL + '/cards/gray_back.png'}
                     />
                     <div>
-                      <Typography>{cardcount}</Typography>
-                      {userstatus === 'other' || !userstatus ? (
-                        <Typography>Please wait for you turn</Typography>
-                      ) : userstatus === 'attacking_1' ? (
-                        <div>
-                          <Typography>You are attacking 1st</Typography>
-                          <Button variant='contained' color='secondary' onClick={finishMove}>
-                            {!userfinished ? <Typography>Finish</Typography> : <Typography>Cancel</Typography>}
-                          </Button>
-                        </div>
-                      ) : userstatus === 'attacking_2' ? (
-                        <div>
-                          <Typography>You are attacking 2nd</Typography>
-                          <Button variant='contained' color='secondary' onClick={finishMove}>
-                            {!userfinished ? <Typography>Finish</Typography> : <Typography>Cancel</Typography>}
-                          </Button>
-                        </div>
-                      ) : (
-                        <div>
-                          <Typography>You are defending</Typography>
-                          <Button variant='contained' color='secondary' onClick={finishMove}>
-                            {field.filter((row) => row.length % 2 === 0).length === field.length ? (
-                              !userfinished ? (
-                                <Typography>Draft</Typography>
-                              ) : (
-                                <Typography>Cancel</Typography>
-                              )
-                            ) : !userfinished ? (
-                              <Typography>Take</Typography>
-                            ) : (
-                              <Typography>Cancel</Typography>
-                            )}
-                          </Button>
-                        </div>
-                      )}
+                      <Typography>{othuser.username}</Typography>
+                      <Typography>{othuser.handlength}</Typography>
                     </div>
                   </Grid>
-                  <Grid item xs={12}>
-                    <Grid container spacing={0}>
-                      {userhand &&
-                        userhand.map((card) => (
-                          <Grid item xs={2} md={1} key={uuidv4()}>
-                            <div>
-                              <img
-                                alt=''
-                                style={{ maxWidth: '6rem', width: '100%', height: 'auto' }}
-                                src={process.env.PUBLIC_URL + `/cards/${card}.png`}
-                                onClick={(e) => {
-                                  userstatus === 'attacking_1'
-                                    ? cardAttack({ card, second: false })
-                                    : userstatus === 'attacking_2'
-                                    ? cardAttack({ card, second: true })
-                                    : userstatus === 'defending'
-                                    ? cardDeffence({ card })
-                                    : e.preventDefault();
-                                }}
-                              />
-                            </div>
-                          </Grid>
+                ))
+              ) : (
+                <></>
+              )}
+            </Grid>
+
+            <Grid container spacing={2}>
+              <Grid item xs={9}>
+                <Grid container spacing={1}>
+                  {field &&
+                    field.map((row) => (
+                      <Grid item xs={2} key={uuidv4()}>
+                        {row.map((item) => (
+                          <img
+                            key={uuidv4()}
+                            alt=''
+                            style={{
+                              maxWidth: '6rem',
+                              width: '100%',
+                              height: 'auto',
+                            }}
+                            src={process.env.PUBLIC_URL + `/cards/${item}.png`}
+                          />
                         ))}
-                    </Grid>
-                  </Grid>
+                      </Grid>
+                    ))}
                 </Grid>
-              </div>
-            ),
-          ]
+              </Grid>
+              <Grid item xs={3} style={{ position: 'relative' }}>
+                <img
+                  alt=''
+                  style={{
+                    position: 'relative',
+                    maxWidth: '6rem',
+                    width: '100%',
+                    height: 'auto',
+                  }}
+                  src={process.env.PUBLIC_URL + `/cards/${lastcard}.png`}
+                />
+                <img
+                  alt=''
+                  style={{
+                    transform: 'rotate(90deg)',
+                    maxWidth: '6rem',
+                    width: '80%',
+                    height: 'auto',
+                    position: 'absolute',
+                    top: '30px',
+                    left: '20px',
+                  }}
+                  src={process.env.PUBLIC_URL + '/cards/gray_back.png'}
+                />
+                <div>
+                  <Typography>{cardcount}</Typography>
+                  {userstatus === 'other' || !userstatus ? (
+                    <Typography>Please wait for you turn</Typography>
+                  ) : userstatus === 'attacking_1' ? (
+                    <div>
+                      <Typography>You are attacking 1st</Typography>
+                      <Button variant='contained' color='secondary' onClick={finishMove}>
+                        {!userfinished ? <Typography>Finish</Typography> : <Typography>Cancel</Typography>}
+                      </Button>
+                    </div>
+                  ) : userstatus === 'attacking_2' ? (
+                    <div>
+                      <Typography>You are attacking 2nd</Typography>
+                      <Button variant='contained' color='secondary' onClick={finishMove}>
+                        {!userfinished ? <Typography>Finish</Typography> : <Typography>Cancel</Typography>}
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Typography>You are defending</Typography>
+                      <Button variant='contained' color='secondary' onClick={finishMove}>
+                        {field.filter((row) => row.length % 2 === 0).length === field.length ? (
+                          !userfinished ? (
+                            <Typography>Draft</Typography>
+                          ) : (
+                            <Typography>Cancel</Typography>
+                          )
+                        ) : !userfinished ? (
+                          <Typography>Take</Typography>
+                        ) : (
+                          <Typography>Cancel</Typography>
+                        )}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </Grid>
+              <Grid item xs={12}>
+                <Grid container spacing={0}>
+                  {userhand &&
+                    userhand.map((card) => (
+                      <Grid item xs={2} md={1} key={uuidv4()}>
+                        <div>
+                          <img
+                            alt=''
+                            style={{ maxWidth: '6rem', width: '100%', height: 'auto' }}
+                            src={process.env.PUBLIC_URL + `/cards/${card}.png`}
+                            onClick={(e) => {
+                              userstatus === 'attacking_1'
+                                ? cardAttack({ card, second: false })
+                                : userstatus === 'attacking_2'
+                                ? cardAttack({ card, second: true })
+                                : userstatus === 'defending'
+                                ? cardDeffence({ card })
+                                : e.preventDefault();
+                            }}
+                          />
+                        </div>
+                      </Grid>
+                    ))}
+                </Grid>
+              </Grid>
+            </Grid>
+          </div>
         )}
       </Paper>
     </div>
   );
-};
-
-DurakView.propTypes = {
-  location: PropTypes.object,
 };
 
 export default DurakView;
