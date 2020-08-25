@@ -23,14 +23,10 @@ export const useStyles = makeStyles((theme) => ({
     color: theme.palette.text.primary,
   },
   form: {
-    display: 'flex',
     justifyContent: 'center',
+    width: '99%',
   },
   checkbox: {
     color: theme.palette.text.primary,
-    marginLeft: '0.7rem',
-    '&$checked': {
-      color: theme.palette.text.primary,
-    },
   },
 }));

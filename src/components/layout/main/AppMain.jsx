@@ -36,7 +36,16 @@ const AppMain = () => {
               </Typography>
             </CardContent>
             <CardActions>
-              <Button component={RouterLink} to={{ pathname: '/room', state: { service } }} size='small' variant='outlined' color='secondary'>
+              <Button
+                component={RouterLink}
+                to={{
+                  pathname: `/room/${service.type}`,
+                  state: { service },
+                }}
+                size='small'
+                variant='outlined'
+                color='secondary'
+              >
                 start
               </Button>
             </CardActions>
@@ -51,7 +60,7 @@ const AppMain = () => {
       <Paper className={classes.paper}>
         <div className={classes.errorLabel}>{error}</div>
         {loading ? (
-          <LinearProgress className={classes.progress} color='secondary' />
+          <LinearProgress color='secondary' />
         ) : (
           <Grid className={classes.grid} container spacing={2}>
             {renderCollection()}
