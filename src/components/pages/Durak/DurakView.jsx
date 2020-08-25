@@ -1,14 +1,12 @@
-import { Button, Divider, Grid, Paper, Typography } from '@material-ui/core';
+import { Button, Grid, Paper, Typography } from '@material-ui/core';
 import React, { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import io from 'socket.io-client';
+import { Link as RouterLink, useParams } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { UserContext } from '../../../app';
+import { SocketContext } from '../../../app';
 import { useStyles } from './DurakView.styles';
 
-let socket;
-
 const DurakView = () => {
+  const { socketMain } = useContext(SocketContext);
   const classes = useStyles();
   const [finishgame, setFinishgame] = useState(null);
   const [userhand, setUserhand] = useState([]);
@@ -18,30 +16,23 @@ const DurakView = () => {
   const [userstatus, setUserStatus] = useState('other');
   const [field, setField] = useState();
   const [userfinished, setUserfinished] = useState(false);
-  const ENDPOINT = `${window.location.host}/durak`;
   const { roomId } = useParams();
-  const { user } = useContext(UserContext);
 
   useEffect(() => {
-    socket = io(ENDPOINT).emit('get-room-durak', { roomId, user });
-
-    return () => {
-      socket.off();
-    };
-  }, [ENDPOINT, roomId, user]);
-
-  useEffect(() => {
-    socket.on('error-redirect', (message) => {
+    socketMain.on('error-redirect', (message) => {
       window.alert(message.error);
       window.location.href = `http://${window.location.host}/`;
     });
-    socket.on('error-msg', (message) => {
+    socketMain.on('error-msg', (message) => {
       window.alert(message.error);
     });
-  }, []);
+    return () => {
+      socketMain.off();
+    };
+  }, [socketMain]);
 
   useEffect(() => {
-    socket.on('handcards', ({ recievedUserhand, allcards, userhands, status, finished }) => {
+    socketMain.on('handcards', ({ recievedUserhand, allcards, userhands, status, finished }) => {
       setUserhand(recievedUserhand);
       setLastcard(allcards.lastcard);
       setCardcount(allcards.cardcount);
@@ -51,51 +42,50 @@ const DurakView = () => {
       setUserfinished(finished);
     });
 
-    socket.on('update-field', ({ updatedField, updatedUserhand }) => {
+    socketMain.on('update-field', ({ updatedField, updatedUserhand }) => {
       setField(updatedField);
       setUserhand(updatedUserhand);
     });
 
-    socket.on('finish-game', ({ lostuser }) => {
+    socketMain.on('finish-game', ({ lostuser }) => {
       setFinishgame(lostuser.username);
     });
 
-    socket.on('play-again', () => {
+    socketMain.on('play-again', () => {
       setFinishgame(null);
-      socket.emit('get-room-durak', { roomId, user });
     });
   });
 
   const cardAttack = ({ card, second }) => {
-    socket.emit('attack', { card, roomId, second });
+    socketMain.emit('attack', { card, roomId, second });
   };
 
   const cardDeffence = ({ card }) => {
-    socket.emit('defence', { card, roomId });
+    socketMain.emit('defence', { card, roomId });
   };
 
   const finishMove = () => {
     setUserfinished(!userfinished);
-    socket.emit('finish-move', { roomId });
+    socketMain.emit('finish-move', { roomId });
   };
 
   const playAgain = () => {
-    socket.emit('play-again', { roomId });
+    socketMain.emit('play-again', { roomId });
+  };
+
+  const goHome = () => {
+    socketMain.emit('durak-leave');
   };
 
   return (
     <div className={classes.main}>
       <Paper className={classes.paper}>
-        <Typography style={{ textAlign: 'center' }} variant='h4'>
-          {}
-        </Typography>
-        <Divider style={{ marginBottom: '1rem' }} light />
+        <Button component={RouterLink} to={`/`} size='small' variant='outlined' color='secondary' style={{ float: 'right' }} onClick={goHome}>
+          home
+        </Button>
         {finishgame !== null ? (
           <div>
             <p style={{ textAlign: 'center' }}>{finishgame} lost! game ended</p>
-            <Button variant='contained' color='secondary' href={`http://${window.location.host}/`}>
-              Go Home
-            </Button>
             <Button variant='contained' color='secondary' onClick={playAgain}>
               Play Again
             </Button>
